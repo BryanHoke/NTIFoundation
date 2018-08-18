@@ -8,6 +8,10 @@
 
 import UIKit
 
+/** The `CollectionDataSource` class is a concrete implementation of the
+	`UICollectionViewDataSource` protocol designed to support composition and
+	sophisticated layout delegated to individual sections of the data source.
+*/
 open class CollectionDataSource: NSObject, UICollectionViewDataSource, CollectionDataSourceMetrics, LoadableContentStateMachineDelegate {
 	
 	public override init() {
@@ -15,26 +19,43 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		stateMachine.delegate = self
 	}
 
+	/// The title of this data source. The value is used to populate section
+	/// headers and the segmented control tab.
 	open var title: String?
 	
+	/// An object that receieves change notifications from this data source.
 	open weak var delegate: CollectionDataSourceDelegate?
 	
 	open weak var controller: CollectionDataSourceController?
 	
 	open var delegatesLoadingToController = false
 	
+	/// Whether this data source allows its items to be selected.
+	///
+	/// The default value is `true`.
 	open var allowsSelection: Bool {
 		return true
 	}
 	
+	/// Whether this is the root data source.
+	///
+	/// Container data sources *always* act as the delegate for their contained
+	/// data sources.
 	open var isRootDataSource: Bool {
 		return !(delegate is CollectionDataSource)
 	}
 	
+	/// Returns the data source for the given section.
+	///
+	/// The default implementation returns `self`.
 	open func dataSourceForSectionAtIndex(_ sectionIndex: Int) -> CollectionDataSource {
 		return self
 	}
 	
+	/// Returns the index path for the data source represented by the global
+	/// index path.
+	///
+	/// Works with `dataSourceForSectionAtIndex(_:)`.
 	open func localIndexPathForGlobal(_ globalIndexPath: IndexPath) -> IndexPath? {
 		return globalIndexPath
 	}
@@ -49,10 +70,15 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		return 0
 	}
 	
+	/// Returns the item at the specified index path.
+	///
+	/// Returns `nil` when `indexPath` does not specify a valid item in the data
+	/// source.
 	open func item(at indexPath: IndexPath) -> AnyItem? {
 		return nil
 	}
 	
+	/// Returns the index path of the specified item in the data source.
 	open func indexPath(for item: AnyItem) -> IndexPath? {
 		return nil
 	}
@@ -136,6 +162,7 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 	open fileprivate(set) var supplementaryItemsByKind: [String: [SupplementaryItem]] = [:]
 	fileprivate var supplementaryItemsByKey: [String: SupplementaryItem] = [:]
 	
+	/// Returns the supplementary item for the given key.
 	open func supplementaryItem(for key: String) -> SupplementaryItem? {
 		return supplementaryItemsByKey[key]
 	}
@@ -162,6 +189,10 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		return metricsHelper.indexPaths(for: supplementaryItem) as [IndexPath]
 	}
 	
+	/// Invokes a closure on the supplementary item of the specified kind at the
+	/// specified index path.
+	///
+	/// `block` is invoked only if the supplementary item is found.
 	open func findSupplementaryItemOfKind(_ kind: String, at indexPath: IndexPath, using block: (_ dataSource: CollectionDataSource, _ localIndexPath: IndexPath, _ supplementaryItem: SupplementaryItem) -> Void) {
 		metricsHelper.findSupplementaryItemOfKind(kind, at: indexPath, using: block)
 	}
