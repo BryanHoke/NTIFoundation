@@ -8,24 +8,42 @@
 
 import UIKit
 
+/// A `ParentCollectionDataSource` that displays only one of its children at a
+/// time.
 public protocol SegmentedCollectionDataSourceProtocol: ParentCollectionDataSource {
 	
+	/// The currently selected data source.
 	var selectedDataSource: CollectionDataSource? { get set }
 	
+	/// The child-index of the currently selected data source.
 	var selectedDataSourceIndex: Int? { get set }
 	
+	/// Removes all child data sources from this data source.
 	func removeAllDataSources()
 	
 }
 
 private let segmentedDataSourceHeaderKey = "SegmentedDataSourceHeaderKey"
 
+/** A `CollectionDataSource` with multiple child data sources but only one
+	visible data source at a time.
+
+	Only the selected data source will become active. When a new data source is
+	selected, the previously selected data source will receive a `willResignActive`
+	call before the new data source receives a `didBecomeActive` call.
+*/
 open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSourceDelegate, SegmentedControlDelegate {
 	
+	/// The collection of data sources contained within this segmented data source.
 	open fileprivate(set) var dataSources: [CollectionDataSource] = []
 	
+	/// Whether changing the selected data source should be animated by default.
 	open var animatesSegmentChanges = true
 	
+	/// Adds a data source to the end of the collection.
+	///
+	/// The title property of `dataSource` will be used to populate a new segment
+	/// in the `UISegmentedControl` associated with this data source.
 	open func add(_ dataSource: CollectionDataSource) {
 		if dataSources.isEmpty {
 			_selectedDataSource = dataSource
@@ -35,6 +53,7 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 		notifyDidAddChild(dataSource)
 	}
 	
+	/// Removes the data source from the collection.
 	open func remove(_ dataSource: CollectionDataSource) {
 		guard let index = dataSourcesIndexOf(dataSource) else {
 			return
@@ -45,6 +64,7 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 		}
 	}
 	
+	/// Removes all data sources from the collection.
 	open func removeAllDataSources() {
 		for dataSource in dataSources where dataSource.delegate === self {
 			dataSource.delegate = nil
@@ -61,6 +81,9 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 		return dataSources.contains(where: { $0 === selectedDataSource })
 	}
 	
+	/// A reference to the currently selected data source.
+	///
+	/// This property is `nil` until the first data source is added.
 	open var selectedDataSource: CollectionDataSource? {
 		get {
 			return _selectedDataSource
@@ -75,12 +98,16 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 		}
 	}
 	
+	/// An object that receives notice of changes to the selected data source.
 	open weak var segmentedCollectionDataSourceDelegate: SegmentedCollectionDataSourceDelegate?
 	
+	/// Sets the selected data source with optional animation.
 	open func setSelectedDataSource(_ selectedDataSource: CollectionDataSource?, isAnimated: Bool) {
 		setSelectedDataSource(selectedDataSource, isAnimated: isAnimated, completionHandler: nil)
 	}
 	
+	/// Sets the selected data source with optional animation and invokes an
+	/// optional closure afterward.
 	open func setSelectedDataSource(_ selectedDataSource: CollectionDataSource?, isAnimated: Bool, completionHandler: (()->())?) {
 		guard selectedDataSource !== self.selectedDataSource else {
 			completionHandler?()
@@ -131,6 +158,7 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 			}, complete: completionHandler)
 	}
 	
+	/// The index of the selected data source in the collection.
 	open var selectedDataSourceIndex: Int? {
 		get {
 			guard let selectedDataSource = self.selectedDataSource else {
@@ -142,6 +170,8 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 			setSelectedDataSourceIndex(newValue, isAnimated: false)
 		}
 	}
+	
+	/// Sets the index of the selected data source with optional animation.
 	open func setSelectedDataSourceIndex(_ selectedDataSourceIndex: Int?, isAnimated: Bool) {
 		guard let index = selectedDataSourceIndex else {
 			selectedDataSource = nil
@@ -155,6 +185,7 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 		return dataSources[dataSourceIndex]
 	}
 	
+	/// The number of sections in the selected data source.
 	open override var numberOfSections: Int {
 		return selectedDataSource?.numberOfSections ?? 0
 	}
@@ -203,6 +234,8 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 	}
 	
 	// TODO: Make computed property for item-by-key?
+	/// The supplementary item which contains the segmented control associated
+	/// with this data source.
 	open var segmentedControlHeader: SegmentedControlSupplementaryItem? {
 		didSet {
 			guard let segmentedControlHeader = self.segmentedControlHeader else {
@@ -245,6 +278,7 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 		}
 	}
 	
+	/// Configures a segmented control to become associated with this data source.
 	open func configure(_ segmentedControl: SegmentedControlProtocol) {
 		let titles = dataSources.map { $0.title ?? "" }
 		
@@ -429,8 +463,10 @@ open class SegmentedCollectionDataSource: CollectionDataSource, CollectionDataSo
 	
 }
 
+/// An object which can repond to changes to a `SegmentedCollectionDataSource`.
 public protocol SegmentedCollectionDataSourceDelegate: class {
 	
+	/// Invoked after the delegating data source changes its selected data source.
 	func segmentedCollectionDataSourceDidChangeSelectedDataSource(_ segmentedCollectionDataSource: SegmentedCollectionDataSource)
 	
 }
