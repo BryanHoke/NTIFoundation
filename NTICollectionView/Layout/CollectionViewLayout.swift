@@ -42,8 +42,14 @@ private enum AutoScrollDirection: String {
 	
 }
 
+/** A `UICollectionViewLayout` that works with `CollectionDataSource` instances
+	to render content.
+*/
 open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMeasuring, CollectionDataSourceDelegate, ShadowRegistrarVending {
 	
+	/// Whether the layout is in editing mode.
+	///
+	/// The default value is `false`.
 	open var isEditing = false {
 		didSet {
 			guard isEditing != oldValue else {
@@ -106,6 +112,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 	
 	// MARK: - Editing helpers
 	
+	/// Whether the item at a given index path can be edited.
 	open func canEditItem(at indexPath: IndexPath) -> Bool {
 		guard let collectionView = self.collectionView,
 			let dataSource = collectionView.dataSource as? CollectionDataSource else {
@@ -114,6 +121,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 		return dataSource.collectionView(collectionView, canEditItemAt: indexPath)
 	}
 	
+	/// Whether the item at a given index path can be moved.
 	open func canMoveItem(at indexPath: IndexPath) -> Bool {
 		guard let collectionView = self.collectionView,
 			let dataSource = collectionView.dataSource as? CollectionDataSource else {
@@ -124,6 +132,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 	
 	// MARK: - CollectionViewLayoutMeasuring
 	
+	/// The computed size of a given supplementary item.
 	open func measuredSizeForSupplementaryItem(_ supplementaryItem: LayoutSupplementaryItem) -> CGSize {
 		guard let collectionView = collectionViewWrapper as? WrapperCollectionView,
 			let dataSource = collectionView.dataSource else {
@@ -144,6 +153,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 		return attributes.frame.size
 	}
 	
+	/// The computed size of a given item.
 	open func measuredSizeForItem(_ item: LayoutItem) -> CGSize {
 		guard let collectionView = collectionViewWrapper as? WrapperCollectionView,
 			let dataSource = collectionView.dataSource else {
@@ -164,6 +174,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 		return attributes.frame.size
 	}
 	
+	/// The computed size of a given placeholder.
 	open func measuredSizeForPlaceholder(_ placeholderInfo: LayoutPlaceholder) -> CGSize {
 		guard let collectionView = collectionViewWrapper as? WrapperCollectionView,
 			let dataSource = collectionView.dataSource else {
@@ -212,7 +223,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 	
 	fileprivate var dragCellSize: CGSize = .zero
 	
-	
+	/// Starts dragging a cell at the specified index path.
 	open func beginDraggingItem(at indexPath: IndexPath) {
 		guard let
 			collectionView = self.collectionView,
@@ -262,6 +273,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 		dragBounds = CGRect(x: dragCellSize.width/2, y: dragCellSize.height/2, width: collectionViewWidth - dragCellSize.width, height: collectionViewHeight - dragCellSize.height)
 	}
 	
+	/// Cancels dragging a cell (if applicable).
 	open func cancelDragging() {
 		guard let
 			currentView = self.currentView,
@@ -297,6 +309,7 @@ open class CollectionViewLayout: UICollectionViewLayout, CollectionViewLayoutMea
 		invalidateLayout(with: context)
 	}
 	
+	/// Ends dragging the current cell (if any).
 	open func endDragging() {
 		guard let
 			currentView = self.currentView,
