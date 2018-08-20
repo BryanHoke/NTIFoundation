@@ -72,11 +72,15 @@ public protocol CollectionDataSourceType: UICollectionViewDataSource, DataSource
 	func collectionView(_ collectionView: UICollectionView, moveItemAt sourceIndexPath: IndexPath, to destinationIndexPath: IndexPath)
 }
 
+/// A `CollectionDataSourceType` that can have child data sources.
 public protocol ParentCollectionDataSource: CollectionDataSourceType, CollectionDataSourceDelegate {
 	
+	/// The child data sources.
 	var dataSources: [CollectionDataSourceType] { get }
 	
+	/// Adds a specified data source to this data source's children.
 	func add(_ dataSource: CollectionDataSourceType)
+	/// Removes a specified data source from this data source's children.
 	func remove(_ dataSource: CollectionDataSourceType)
 	
 }
