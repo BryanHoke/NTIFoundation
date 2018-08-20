@@ -8,20 +8,26 @@
 
 import UIKit
 
+/// A string used as a supplementary view element kind.
 public typealias ElementKind = String
+/// A string used as a reuse identifier.
 public typealias ReuseIdentifier = String
 
+/// A type which provides a shadow registrar.
 public protocol ShadowRegistrarVending: NSObjectProtocol {
 	
+	/// The shadow registrar.
 	var shadowRegistrar: ShadowRegistrar { get }
 	
 }
 
+/// A class for managing registration of reusable views.
 open class ShadowRegistrar: NSObject {
 
 	fileprivate var cellRegistry: [ReuseIdentifier: ShadowRegistration] = [:]
 	fileprivate var supplementaryViewRegistry: [ElementKind: [ReuseIdentifier: ShadowRegistration]] = [:]
 	
+	/// Registers a `UICollectionReusableView` cell class with a reuse identifier.
 	open func registerClass(_ cellClass: UICollectionReusableView.Type, forCellWith identifier: ReuseIdentifier) {
 		let shadowRegistration = shadowRegistrationForCell(with: identifier)
 		shadowRegistration.viewClass = cellClass
@@ -29,6 +35,7 @@ open class ShadowRegistrar: NSObject {
 		shadowRegistration.reusableView = nil
 	}
 	
+	/// Registers a nib with a cell reuse identifier.
 	open func registerNib(_ nib: UINib, forCellWith identifier: ReuseIdentifier) {
 		let shadowRegistration = shadowRegistrationForCell(with: identifier)
 		shadowRegistration.viewClass = nil
@@ -36,6 +43,8 @@ open class ShadowRegistrar: NSObject {
 		shadowRegistration.reusableView = nil
 	}
 	
+	/// Registers a `UICollectionReusableView` class for a supplementary view of
+	/// a given kind with a reuse identifier.
 	open func registerClass(_ viewClass: UICollectionReusableView.Type, forSupplementaryViewOf elementKind: ElementKind, with identifier: ReuseIdentifier) {
 		let shadowRegistration = shadowRegistrationForSupplementaryView(of: elementKind, with: identifier)
 		shadowRegistration.viewClass = viewClass
@@ -52,6 +61,8 @@ open class ShadowRegistrar: NSObject {
 		return shadowRegistration!
 	}
 	
+	/// Registers a nib for a supplementary view of a given kind with a reuse
+	/// identifier.
 	open func registerNib(_ nib: UINib, forSupplementaryViewOf elementKind: ElementKind, with identifier: ReuseIdentifier) {
 		let shadowRegistration = shadowRegistrationForSupplementaryView(of: elementKind, with: identifier)
 		shadowRegistration.viewClass = nil
@@ -79,6 +90,8 @@ open class ShadowRegistrar: NSObject {
 		return elementKindRegistry!
 	}
 	
+	/// Deques a cell with a given reuse identifier and index path for a
+	/// given collection view.
 	open func dequeReusableCell(with identifier: ReuseIdentifier, for indexPath: IndexPath, collectionView: UICollectionView) -> UICollectionReusableView {
 		let layout = collectionView.collectionViewLayout
 		let layoutAttributes = layout.layoutAttributesForItem(at: indexPath)!
@@ -86,6 +99,8 @@ open class ShadowRegistrar: NSObject {
 		return dequeReusableView(for: shadowRegistration, identifier: identifier, layoutAttributes: layoutAttributes, collectionView: collectionView)
 	}
 	
+	/// Deques a supplementary view of a given kind with a given reuse
+	/// identifier and index path for a given collection view.
 	open func dequeReusableSupplementaryView(of elementKind: ElementKind, with identifier: ReuseIdentifier, for indexPath: IndexPath, collectionView: UICollectionView) -> UICollectionReusableView {
 		let layout = collectionView.collectionViewLayout
 		let layoutAttributes = layout.layoutAttributesForSupplementaryView(ofKind: elementKind, at: indexPath)!

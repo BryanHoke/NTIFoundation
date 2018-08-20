@@ -33,27 +33,37 @@ func invalidateLayoutAttributes(_ attributes: UICollectionViewLayoutAttributes, 
 	}
 }
 
+/// A type that represents collection view layout information.
 public protocol LayoutInfo: LayoutSizing, LayoutAttributesResolving, LayoutSectionProvider {
 	
+	/// The size of the collection view.
 	var collectionViewSize: CGSize { get set }
 	
+	/// The height of the layout.
 	var height: CGFloat { get set }
 	
 	/// The additional height that's available to placeholders.
 	var heightAvailableForPlaceholders: CGFloat { get set }
 	
+	/// The content offset of the layout.
 	var contentOffset: CGPoint { get set }
 	
+	/// The content inset of the layout.
 	var contentInset: UIEdgeInsets { get set }
 	
+	/// The bounds of the layout.
 	var bounds: CGRect { get set }
 	
+	/// Whether the layout is currently being edited.
 	var isEditing: Bool { get set }
 	
+	/// The layout sections.
 	var sections: [LayoutSection] { get }
 	
+	/// Modifies the section at the specified index using a closure.
 	func mutateSection(at index: Int, using mutator: (inout LayoutSection) -> Void)
 	
+	/// Modifies the item at the specified index path using a closure.
 	func mutateItem(at indexPath: IndexPath, using mutator: (inout LayoutItem) -> Void)
 	
 	/// Create a new placeholder covering the specified range of sections.
@@ -74,6 +84,8 @@ public protocol LayoutInfo: LayoutSizing, LayoutAttributesResolving, LayoutSecti
 	/// Update the size of a supplementary item and mark it as invalidated in the given *invalidationContext*. This is needed for self-sizing view support. This method also adjusts the position of any content affected by the size change.
 	func setSize(_ size: CGSize, forElementOfKind kind: String, at indexPath: IndexPath, invalidationContext: UICollectionViewLayoutInvalidationContext?)
 	
+	/// Updates special layout items for a given content offset using
+	/// a specific invalidation context.
 	func updateSpecialItemsWithContentOffset(_ contentOffset: CGPoint, invalidationContext: UICollectionViewLayoutInvalidationContext?)
 	
 }

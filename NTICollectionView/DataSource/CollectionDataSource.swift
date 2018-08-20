@@ -8,6 +8,10 @@
 
 import UIKit
 
+/** The `CollectionDataSource` class is a concrete implementation of the
+	`UICollectionViewDataSource` protocol designed to support composition and
+	sophisticated layout delegated to individual sections of the data source.
+*/
 open class CollectionDataSource: NSObject, UICollectionViewDataSource, CollectionDataSourceMetrics, LoadableContentStateMachineDelegate {
 	
 	public override init() {
@@ -15,26 +19,46 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		stateMachine.delegate = self
 	}
 
+	/// The title of this data source. The value is used to populate section
+	/// headers and the segmented control tab.
 	open var title: String?
 	
+	/// An object that receieves change notifications from this data source.
 	open weak var delegate: CollectionDataSourceDelegate?
 	
+	/// An optional controller that can be used to manage some tasks for this
+	/// data source.
 	open weak var controller: CollectionDataSourceController?
 	
+	/// Whether loading is handled by the `controller`.
 	open var delegatesLoadingToController = false
 	
+	/// Whether this data source allows its items to be selected.
+	///
+	/// The default value is `true`.
 	open var allowsSelection: Bool {
 		return true
 	}
 	
+	/// Whether this is the root data source.
+	///
+	/// Container data sources *always* act as the delegate for their contained
+	/// data sources.
 	open var isRootDataSource: Bool {
 		return !(delegate is CollectionDataSource)
 	}
 	
+	/// Returns the data source for the given section.
+	///
+	/// The default implementation returns `self`.
 	open func dataSourceForSectionAtIndex(_ sectionIndex: Int) -> CollectionDataSource {
 		return self
 	}
 	
+	/// Returns the index path for the data source represented by the global
+	/// index path.
+	///
+	/// Works with `dataSourceForSectionAtIndex(_:)`.
 	open func localIndexPathForGlobal(_ globalIndexPath: IndexPath) -> IndexPath? {
 		return globalIndexPath
 	}
@@ -49,10 +73,15 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		return 0
 	}
 	
+	/// Returns the item at the specified index path.
+	///
+	/// Returns `nil` when `indexPath` does not specify a valid item in the data
+	/// source.
 	open func item(at indexPath: IndexPath) -> AnyItem? {
 		return nil
 	}
 	
+	/// Returns the index path of the specified item in the data source.
 	open func indexPath(for item: AnyItem) -> IndexPath? {
 		return nil
 	}
@@ -132,10 +161,13 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 	/// The default metrics for all sections in this data source.
 	open var defaultMetrics: DataSourceSectionMetricsProviding?
 	
+	/// The layout metrics by section.
 	open fileprivate(set) var sectionMetrics: [Int: DataSourceSectionMetricsProviding] = [:]
+	/// The supplementary items by kind.
 	open fileprivate(set) var supplementaryItemsByKind: [String: [SupplementaryItem]] = [:]
 	fileprivate var supplementaryItemsByKey: [String: SupplementaryItem] = [:]
 	
+	/// Returns the supplementary item for the given key.
 	open func supplementaryItem(for key: String) -> SupplementaryItem? {
 		return supplementaryItemsByKey[key]
 	}
@@ -150,36 +182,53 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		sectionMetrics[sectionIndex] = metrics
 	}
 	
+	/// Helps take snapshots of metrics.
 	open var metricsHelper: CollectionDataSourceMetrics {
 		return CollectionDataSourceMetricsHelper(dataSource: self)
 	}
 	
+	/// The number of supplementary items in this data source of a specified
+	/// kind in a specific index, depending on whether the contents of child
+	/// data sources are included.
 	open func numberOfSupplementaryItemsOfKind(_ kind: String, inSectionAtIndex sectionIndex: Int, shouldIncludeChildDataSources: Bool) -> Int {
 		return metricsHelper.numberOfSupplementaryItemsOfKind(kind, inSectionAtIndex: sectionIndex, shouldIncludeChildDataSources: shouldIncludeChildDataSources)
 	}
 	
+	/// Returns the index paths of the given supplementary item in the data source.
 	open func indexPaths(for supplementaryItem: SupplementaryItem) -> [IndexPath] {
 		return metricsHelper.indexPaths(for: supplementaryItem) as [IndexPath]
 	}
 	
+	/// Invokes a closure on the supplementary item of the specified kind at the
+	/// specified index path.
+	///
+	/// `block` is invoked only if the supplementary item is found.
 	open func findSupplementaryItemOfKind(_ kind: String, at indexPath: IndexPath, using block: (_ dataSource: CollectionDataSource, _ localIndexPath: IndexPath, _ supplementaryItem: SupplementaryItem) -> Void) {
 		metricsHelper.findSupplementaryItemOfKind(kind, at: indexPath, using: block)
 	}
 	
+	/// Compute a flattened shapshot of the layout metrics associated with this
+	/// data source and its children.
 	open func snapshotMetrics() -> [Int: DataSourceSectionMetricsProviding] {
 		return metricsHelper.snapshotMetrics()
 	}
 	
+	/// Computes a flattened snapshot of the layout metrics for the specified
+	/// section. This resolves metrics from parent and child data sources.
 	open func snapshotMetricsForSectionAtIndex(_ sectionIndex: Int) -> DataSourceSectionMetricsProviding? {
 		return metricsHelper.snapshotMetricsForSectionAtIndex(sectionIndex)
 	}
 	
+	/// Whether this data source contributes global metrics.
 	open var contributesGlobalMetrics = true
 	
+	/// Computes a flattened snapshot of the global metrics contributed
+	/// by this data source.
 	open func snapshotContributedGlobalMetrics() -> DataSourceSectionMetricsProviding? {
 		return metricsHelper.snapshotContributedGlobalMetrics()
 	}
 	
+	/// Adds a supplementary item to this data source.
 	open func add(_ supplementaryItem: SupplementaryItem) {
 		let kind = supplementaryItem.elementKind
 		var items = supplementaryItemsOfKind(kind)
@@ -187,6 +236,7 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		supplementaryItemsByKind[kind] = items
 	}
 	
+	/// Adds a supplementary item to a specific section of this data source.
 	open func add(_ supplementaryItem: SupplementaryItem, forSectionAtIndex sectionIndex: Int) {
 		guard var metrics = sectionMetrics[sectionIndex] else {
 			assertionFailure("There are no metrics for section \(sectionIndex)")
@@ -195,19 +245,26 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		metrics.add(supplementaryItem)
 	}
 	
+	/// Adds the given supplementary item to this data source for the specified
+	/// key.
 	open func add(_ supplementaryItem: SupplementaryItem, forKey key: String) {
 		add(supplementaryItem)
 		supplementaryItemsByKey[key] = supplementaryItem
 	}
 	
+	/// Returns the supplementary items of the given kind.
 	open func supplementaryItemsOfKind(_ kind: String) -> [SupplementaryItem] {
 		return supplementaryItemsByKind[kind] ?? []
 	}
 	
+	/// Returns the supplementary item for the given key, if it exists.
 	open func supplementaryItemForKey(_ key: String) -> SupplementaryItem? {
 		return supplementaryItemsByKey[key]
 	}
 	
+	/// Removes the supplementary item for the given key, if it exists.
+	///
+	/// If there is no supplementary item for the given key, nothing happens.
 	open func removeSupplementaryItemForKey(_ key: String) {
 		guard let oldSupplementaryItem = supplementaryItemForKey(key) else {
 			return
@@ -225,6 +282,8 @@ open class CollectionDataSource: NSObject, UICollectionViewDataSource, Collectio
 		}
 	}
 	
+	/// Replaces the supplementary item for the specified key with a new
+	/// supplementary item.
 	open func replaceSupplementaryItemForKey(_ key: String, with supplementaryItem: SupplementaryItem) {
 		guard let oldSupplementaryItem = supplementaryItemForKey(key) else {
 			add(supplementaryItem, forKey: key)
